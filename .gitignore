@@ -11,3 +11,11 @@ npm-debug.log*
 !POC_VIDEO_PLAN.md
 !COURSEWORK_IMPLEMENTATION_PLAN.md
 !SECURITY_REPORT_TEMPLATE.md
+!evidence/
+!evidence/**
+!evidence/**/*.md
+!evidence/**/*.txt
+!evidence/**/*.png
+!evidence/**/*.jpg
+!evidence/**/*.jpeg
+!evidence/**/*.webp
