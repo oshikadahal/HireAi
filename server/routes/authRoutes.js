@@ -2,13 +2,14 @@ const router = require('express').Router();
 const { protect } = require('../middleware/auth');
 const { uploadAvatar } = require('../middleware/upload');
 const {
-  registerCandidate, registerHR, login, getMe, changePassword,
+  registerCandidate, registerHR, login, logout, getMe, changePassword,
   forgotPassword, resetPassword, uploadAvatar: uploadAvatarCtrl,
 } = require('../controllers/authController');
 
 router.post('/register/candidate', registerCandidate);
 router.post('/register/hr', registerHR);
 router.post('/login', login);
+router.post('/logout', protect, logout);
 router.get('/me', protect, getMe);
 router.put('/change-password', protect, changePassword);
 router.post('/forgot-password', forgotPassword);

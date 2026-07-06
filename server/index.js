@@ -8,6 +8,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const mongoSanitize = require('express-mongo-sanitize');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
 
 const connectDB = require('./config/db');
 const { generalLimiter, authLimiter } = require('./middleware/security');
@@ -26,6 +27,7 @@ app.use(
 );
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+app.use(cookieParser());
 app.use(mongoSanitize());
 app.use(hpp({ whitelist: ['skillsRequired', 'skills'] }));
 app.use(generalLimiter);
