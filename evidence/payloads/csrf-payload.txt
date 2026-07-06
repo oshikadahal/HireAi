@@ -1,6 +1,0 @@
-<form action="http://localhost:5000/api/auth/logout" method="POST">
-  <input type="submit" value="Submit">
-</form>
-
-Expected result before remediation: state-changing request could be triggered from a malicious site.
-Expected result after remediation: request is rejected without a valid CSRF token.

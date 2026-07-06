@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "csurf": "^1.11.0",
+    "express-validator": "^7.3.2",
+    "otplib": "^13.4.1",
+    "xss-clean": "^0.1.4"
+  }
+}
