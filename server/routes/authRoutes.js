@@ -4,6 +4,7 @@ const { uploadAvatar } = require('../middleware/upload');
 const {
   registerCandidate, registerHR, login, logout, getMe, changePassword,
   forgotPassword, resetPassword, uploadAvatar: uploadAvatarCtrl,
+  enableMfa, verifyMfa,
 } = require('../controllers/authController');
 
 router.post('/register/candidate', registerCandidate);
@@ -15,5 +16,7 @@ router.put('/change-password', protect, changePassword);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
 router.post('/upload-avatar', protect, uploadAvatar.single('avatar'), uploadAvatarCtrl);
+router.post('/mfa/enable', protect, enableMfa);
+router.post('/mfa/verify', protect, verifyMfa);
 
 module.exports = router;
