@@ -1,0 +1,8 @@
+node_modules/
+*.log
+uploads/resumes/*
+uploads/avatars/*
+uploads/logos/*
+!uploads/resumes/.gitkeep
+!uploads/avatars/.gitkeep
+!uploads/logos/.gitkeep
