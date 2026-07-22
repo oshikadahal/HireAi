@@ -1,0 +1,6 @@
+GET /api/applications/1234567890abcdef HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer <victim-token>
+
+--
+// Example payload to illustrate an IDOR request used during testing. Replace IDs and tokens when reproducing.
