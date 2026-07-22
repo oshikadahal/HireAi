@@ -38,7 +38,8 @@ export default function JobDetailPage() {
       setShowForm(false);
       toast.success('Application submitted!');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Application failed');
+      const message = err?.userMessage || err?.response?.data?.message || 'We could not submit your application. Please try again in a moment.';
+      toast.error(message);
     } finally {
       setApplying(false);
     }

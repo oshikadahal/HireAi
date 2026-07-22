@@ -11,12 +11,14 @@ const storedUser = (() => {
   }
 })();
 
+const getAuthErrorMessage = (err, fallback) => err?.userMessage || err?.response?.data?.message || err?.message || fallback;
+
 export const loginUser = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
   try {
     const { data } = await api.post('/auth/login', credentials);
     return data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.message || 'Login failed');
+    return rejectWithValue(getAuthErrorMessage(err, 'We could not sign you in. Please try again.'));
   }
 });
 
@@ -25,7 +27,7 @@ export const registerCandidate = createAsyncThunk('auth/registerCandidate', asyn
     const { data } = await api.post('/auth/register/candidate', payload);
     return data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.message || 'Registration failed');
+    return rejectWithValue(getAuthErrorMessage(err, 'We could not create your account. Please try again.'));
   }
 });
 
@@ -34,7 +36,7 @@ export const registerHR = createAsyncThunk('auth/registerHR', async (payload, { 
     const { data } = await api.post('/auth/register/hr', payload);
     return data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.message || 'Registration failed');
+    return rejectWithValue(getAuthErrorMessage(err, 'We could not create your account. Please try again.'));
   }
 });
 
@@ -43,7 +45,7 @@ export const fetchMe = createAsyncThunk('auth/fetchMe', async (_, { rejectWithVa
     const { data } = await api.get('/auth/me');
     return data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.message);
+    return rejectWithValue(getAuthErrorMessage(err, 'We could not load your account. Please sign in again.'));
   }
 });
 
