@@ -1,0 +1,5 @@
+POST /api/auth/session HTTP/1.1
+Host: localhost:5000
+Cookie: refreshToken=<old-refresh-token>
+
+// Example showing a replayed or reused refresh token used during testing. Use carefully in lab environments.
