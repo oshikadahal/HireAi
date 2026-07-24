@@ -8,7 +8,8 @@ const {
 router.use(protect, authorize('candidate'));
 router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
-router.post('/upload-resume', uploadResume.single('resume'), uploadResumeCtrl);
+// Use the secure upload middleware directly (drop-in) — previously multer-style .single('resume') was used
+router.post('/upload-resume', uploadResume, uploadResumeCtrl);
 router.get('/dashboard-stats', getDashboardStats);
 
 module.exports = router;
