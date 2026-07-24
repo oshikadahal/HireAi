@@ -7,7 +7,8 @@ const {
 
 router.get('/:id/public', getPublicCompany);
 router.get('/profile', protect, authorize('hr'), getCompanyProfile);
-router.put('/profile', protect, authorize('hr'), uploadLogo.single('logo'), updateCompanyProfile);
+// Use secure upload middleware directly (drop-in) to validate content server-side
+router.put('/profile', protect, authorize('hr'), uploadLogo, updateCompanyProfile);
 router.get('/dashboard', protect, authorize('hr'), getHRDashboard);
 
 module.exports = router;
