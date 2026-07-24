@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "security:manual-tests": "bash scripts/manual_tests.sh"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -32,7 +33,8 @@
     "nodemailer": "^6.9.14",
     "otplib": "^12.0.0",
     "pdf-parse": "^1.1.1",
-    "xss-clean": "^0.1.4"
+    "xss-clean": "^0.1.4",
+    "file-type": "^18.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
