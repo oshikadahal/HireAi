@@ -41,21 +41,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.get('/api/health', (req, res) => res.json({ success: true, message: 'HireAI API is running' }));
 app.get('/api/csrf-token', (req, res) => res.json({ success: true, csrfToken: '' }));
 
-// ── Routes ────────────────────────────────────────────────
-app.use('/api/auth', authLimiter, require('./routes/authRoutes'));
-app.use('/api/candidates', require('./routes/candidateRoutes'));
-app.use('/api/companies', require('./routes/companyRoutes'));
-app.use('/api/jobs', require('./routes/jobRoutes'));
-app.use('/api/applications', require('./routes/applicationRoutes'));
-app.use('/api/assessments', require('./routes/assessmentRoutes'));
-app.use('/api/interviews', require('./routes/interviewRoutes'));
-app.use('/api/notifications', require('./routes/notificationRoutes'));
-app.use('/api/admin', require('./routes/adminRoutes'));
-app.use('/api/ai', require('./routes/aiRoutes'));
-
-// ── 404 + error handler (must be last) ───────────────────
-app.use(notFound);
-app.use(errorHandler);
+// Note: route registration and error handlers are performed when not testing
+// to avoid loading route modules (which may import ESM-only dependencies)
+// during unit tests that only need the minimal app.
 
 // ── Start ─────────────────────────────────────────────────
 const PORT = Number(process.env.PORT || 5000);
@@ -78,6 +66,29 @@ const startServer = (port) => {
   });
 };
 
-connectDB().then(() => startServer(PORT));
+// Only connect to the database and start the HTTP server when not running tests.
+if (process.env.NODE_ENV !== 'test') {
+  // ── Routes ────────────────────────────────────────────────
+  app.use('/api/auth', authLimiter, require('./routes/authRoutes'));
+  app.use('/api/candidates', require('./routes/candidateRoutes'));
+  app.use('/api/companies', require('./routes/companyRoutes'));
+  app.use('/api/jobs', require('./routes/jobRoutes'));
+  app.use('/api/applications', require('./routes/applicationRoutes'));
+  app.use('/api/assessments', require('./routes/assessmentRoutes'));
+  app.use('/api/interviews', require('./routes/interviewRoutes'));
+  app.use('/api/notifications', require('./routes/notificationRoutes'));
+  app.use('/api/admin', require('./routes/adminRoutes'));
+  app.use('/api/ai', require('./routes/aiRoutes'));
+
+  // ── 404 + error handler (must be last) ───────────────────
+  app.use(notFound);
+  app.use(errorHandler);
+
+  connectDB().then(() => startServer(PORT));
+} else {
+  // In test mode we export the app without starting the listener/DB connection
+  // and without loading the route modules to keep tests lightweight.
+  console.log('Running in test mode: skipping DB connect, server start, and route registration');
+}
 
 module.exports = app;

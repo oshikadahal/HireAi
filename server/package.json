@@ -8,8 +8,8 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "seed": "node scripts/seed.js",
-    "test": "jest --runInBand --detectOpenHandles",
-    "security:manual-tests": "bash scripts/manual_tests.sh"
+    "security:manual-tests": "bash scripts/manual_tests.sh",
+    "test": "jest --runInBand --detectOpenHandles"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -25,6 +25,7 @@
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^7.4.0",
     "express-validator": "^7.0.0",
+    "file-type": "^18.0.0",
     "helmet": "^7.1.0",
     "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.2",
@@ -34,12 +35,11 @@
     "nodemailer": "^6.9.14",
     "otplib": "^12.0.0",
     "pdf-parse": "^1.1.1",
-    "xss-clean": "^0.1.4",
-    "file-type": "^18.0.0"
+    "xss-clean": "^0.1.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.4",
-    "jest": "^29.0.0",
-    "supertest": "^6.3.3"
+    "jest": "^30.4.2",
+    "supertest": "^6.3.4"
   }
 }
