@@ -15,7 +15,8 @@ router.get('/me', protect, getMe);
 router.put('/change-password', protect, changePassword);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
-router.post('/upload-avatar', protect, uploadAvatar.single('avatar'), uploadAvatarCtrl);
+// Use secure upload middleware directly (drop-in) to validate content server-side
+router.post('/upload-avatar', protect, uploadAvatar, uploadAvatarCtrl);
 router.post('/mfa/enable', protect, enableMfa);
 router.post('/mfa/verify', protect, verifyMfa);
 
