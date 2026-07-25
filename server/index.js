@@ -9,6 +9,7 @@ const morgan = require('morgan');
 const mongoSanitize = require('express-mongo-sanitize');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
+const csurf = require('csurf');
 const xss = require('xss-clean');
 
 const connectDB = require('./config/db');
@@ -29,17 +30,21 @@ app.use(
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(cookieParser());
+app.use(csurf({
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  },
+}));
 app.use(mongoSanitize());
 app.use(xss());
 app.use(hpp({ whitelist: ['skillsRequired', 'skills'] }));
 app.use(generalLimiter);
 
-// ── Static file serving (resumes, avatars, logos) ────────
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// ── Health check ──────────────────────────────────────────
+// ── Health check and CSRF token endpoint ──────────────────
 app.get('/api/health', (req, res) => res.json({ success: true, message: 'HireAI API is running' }));
-app.get('/api/csrf-token', (req, res) => res.json({ success: true, csrfToken: '' }));
+app.get('/api/csrf-token', (req, res) => res.json({ success: true, csrfToken: req.csrfToken() }));
 
 // Note: route registration and error handlers are performed when not testing
 // to avoid loading route modules (which may import ESM-only dependencies)
@@ -70,6 +75,7 @@ const startServer = (port) => {
 if (process.env.NODE_ENV !== 'test') {
   // ── Routes ────────────────────────────────────────────────
   app.use('/api/auth', authLimiter, require('./routes/authRoutes'));
+  app.use('/api', require('./routes/uploadRoutes'));
   app.use('/api/candidates', require('./routes/candidateRoutes'));
   app.use('/api/companies', require('./routes/companyRoutes'));
   app.use('/api/jobs', require('./routes/jobRoutes'));

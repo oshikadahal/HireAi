@@ -32,6 +32,12 @@ exports.errorHandler = (err, req, res, next) => {
     }
   }
 
+  // CSRF validation failures
+  if (err.code === 'EBADCSRFTOKEN') {
+    statusCode = 403;
+    message = 'Invalid CSRF token';
+  }
+
   // Multer errors (file too large, wrong type)
   if (err.name === 'MulterError') {
     statusCode = 400;
