@@ -6,7 +6,6 @@ const ActivityLog = require('../models/ActivityLog');
 const getTokenFromRequest = (req) => {
   const header = req.headers.authorization;
   if (header && header.startsWith('Bearer ')) return header.split(' ')[1];
-
   if (req.cookies && req.cookies.token) return req.cookies.token;
   return null;
 };
@@ -45,6 +44,12 @@ exports.protect = asyncHandler(async (req, res, next) => {
   }
 
   req.user = user;
+  req.session = {
+    ...req.session,
+    userId: user._id.toString(),
+    role: user.role,
+    lastActivityAt: new Date().toISOString(),
+  };
   next();
 });
 
@@ -55,6 +60,25 @@ exports.authorize = (...roles) => (req, res, next) => {
     throw new Error(`Role '${req.user.role}' cannot access this resource`);
   }
   next();
+};
+
+exports.requireOwnership = (resourceUserField = 'user') => (req, res, next) => {
+  if (!req.user) {
+    res.status(401);
+    throw new Error('Not authorized');
+  }
+
+  const ownerId = req.params[resourceUserField] || req.body?.[resourceUserField];
+  if (req.user.role === 'admin' || req.user.role === 'hr') {
+    return next();
+  }
+
+  if (ownerId && ownerId.toString() === req.user._id.toString()) {
+    return next();
+  }
+
+  res.status(403);
+  throw new Error('You can only access your own resources');
 };
 
 exports.logActivity = asyncHandler(async (req, res, next) => {

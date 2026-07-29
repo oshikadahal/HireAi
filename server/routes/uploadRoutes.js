@@ -2,7 +2,6 @@ const path = require('path');
 const express = require('express');
 const asyncHandler = require('express-async-handler');
 const fs = require('fs');
-const FileType = require('file-type');
 
 const router = express.Router();
 
@@ -12,6 +11,19 @@ const safeJoin = (base, subfolder, filename) => {
   const resolved = path.resolve(base, subfolder, filename);
   if (!resolved.startsWith(path.resolve(base))) throw new Error('Invalid file path');
   return resolved;
+};
+
+const detectFromFile = async (filePath) => {
+  const fd = await fs.promises.open(filePath, 'r');
+  const buffer = Buffer.alloc(16);
+  await fd.read(buffer, 0, 16, 0);
+  await fd.close();
+  const head = buffer.toString();
+  if (head.includes('%PDF') || head.includes('PDF-')) return { ext: 'pdf', mime: 'application/pdf' };
+  if (buffer[0] === 0xff && buffer[1] === 0xD8 && buffer[2] === 0xFF) return { ext: 'jpg', mime: 'image/jpeg' };
+  if (buffer.length >= 8 && buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) return { ext: 'png', mime: 'image/png' };
+  if (buffer.slice(0, 4).toString() === 'RIFF' && buffer.slice(8, 12).toString() === 'WEBP') return { ext: 'webp', mime: 'image/webp' };
+  return null;
 };
 
 // GET /api/uploads/:subfolder/:filename
@@ -35,16 +47,25 @@ router.get('/uploads/:subfolder/:filename', asyncHandler(async (req, res) => {
     }
     // Lazy lookup: candidate.resumeUrl contains the API path; matching by filename is sufficient
     const Candidate = require('../models/Candidate');
-    const candidate = await Candidate.findOne({ resumeUrl: { $regex: filename + '$' } }).populate('user', 'role _id');
+    // Be robust to test mocks: Candidate.findOne may return a thenable or a Query with populate()
+    const candidateQuery = Candidate.findOne({ resumeUrl: { $regex: filename + '$' } });
+    let candidate;
+    if (candidateQuery && typeof candidateQuery.populate === 'function') {
+      // Use exec() to execute the populated query once
+      candidate = await candidateQuery.populate('user', 'role _id').exec();
+    } else {
+      candidate = await candidateQuery;
+    }
 
-    if (!candidate) return res.status(404).json({ success: false, message: 'Resume owner not found' });
+    if (!candidate) {
+      return res.status(404).json({ success: false, message: 'Resume owner not found' });
+    }
 
     const isOwner = candidate.user && candidate.user._id && candidate.user._id.toString() === req.user._id.toString();
     const isPrivileged = ['admin', 'hr'].includes(req.user.role);
     if (!isOwner && !isPrivileged) return res.status(403).json({ success: false, message: 'Forbidden' });
 
-    // Serve as attachment for privacy
-    const detected = await FileType.fromFile(absolutePath);
+    const detected = await detectFromFile(absolutePath);
     const contentType = detected?.mime || 'application/octet-stream';
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
@@ -54,7 +75,7 @@ router.get('/uploads/:subfolder/:filename', asyncHandler(async (req, res) => {
 
   // For avatars and logos: serve publicly but sanitize headers and force safe types
   if (['avatars', 'logos'].includes(subfolder)) {
-    const detected = await FileType.fromFile(absolutePath);
+    const detected = await detectFromFile(absolutePath);
     const contentType = detected?.mime || 'application/octet-stream';
 
     // Only allow image content types here

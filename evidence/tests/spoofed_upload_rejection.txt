@@ -1,0 +1,17 @@
+=== Spoofed Resume Upload - File Type Rejection Test ===
+Date: 2026-07-29T06:26:35.410Z
+Endpoint: POST http://localhost:5000/api/candidates/upload-resume
+File uploaded: exploit.html (content: <p>test upload</p>)
+
+=== RESPONSE ===
+HTTP Status: 400
+Body: {"success":false,"message":"Uploaded file type is not allowed","stack":"Error: Uploaded file type is not allowed\n    at C:\\Users\\anils\\OneDrive\\Desktop\\Hireai security\\hireai\\server\\middleware\\upload.js:78:23\n    at done (C:\\Users\\anils\\OneDrive\\Desktop\\Hireai security\\hireai\\server\\node_modules\\multer\\lib\\make-middleware.js:47:7)\n    at indicateDone (C:\\Users\\anils\\OneDrive\\Desktop\\Hireai security\\hireai\\server\\node_modules\\multer\\lib\\make-middleware.js:51:68)\n    at Multipart.<anonymous> (C:\\Users\\anils\\OneDrive\\Desktop\\Hireai security\\hireai\\server\\node_modules\\multer\\lib\\make-middleware.js:168:7)\n    at Multipart.emit (node:events:524:28)\n    at emitCloseNT (node:internal/streams/destroy:148:10)\n    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)"}
+
+=== TEST RESULTS ===
+[PASS] Status is 400 (got 400)
+[PASS] Response contains "Uploaded file type is not allowed"
+
+=== CONCLUSION ===
+The upload pipeline rejects non-PDF files based on magic-byte validation and explicit PDF allowlisting.
+HTML files are rejected with HTTP 400 and the message "Uploaded file type is not allowed".
+This prevents stored XSS and content spoofing in the resume upload flow.

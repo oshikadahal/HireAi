@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Company = require('../models/Company');
 const Job = require('../models/Job');
 const Application = require('../models/Application');
+const ActivityLog = require('../models/ActivityLog');
 const notify = require('../utils/notify');
 
 // GET /api/admin/dashboard
@@ -40,6 +41,31 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     recentJobs,
     monthlyRegistrations: monthlyRegistrationsRaw,
   });
+});
+
+// GET /api/admin/activity-logs
+exports.getActivityLogs = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 20, search } = req.query;
+  const pageNum = Math.max(1, Number(page));
+  const limitNum = Math.min(100, Number(limit));
+  const query = search ? {
+    $or: [
+      { action: { $regex: search, $options: 'i' } },
+      { details: { $regex: search, $options: 'i' } },
+      { resource: { $regex: search, $options: 'i' } },
+    ],
+  } : {};
+
+  const [total, logs] = await Promise.all([
+    ActivityLog.countDocuments(query),
+    ActivityLog.find(query)
+      .sort({ createdAt: -1 })
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
+      .populate('user', 'name email role'),
+  ]);
+
+  res.json({ success: true, logs, total, page: pageNum, pages: Math.max(1, Math.ceil(total / limitNum)) });
 });
 
 // GET /api/admin/users

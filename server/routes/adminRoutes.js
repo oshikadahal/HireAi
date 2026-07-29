@@ -2,7 +2,7 @@ const router = require('express').Router();
 const { protect, authorize } = require('../middleware/auth');
 const { uploadLogo } = require('../middleware/upload');
 const {
-  getDashboard, getAllUsers, toggleUserStatus,
+  getDashboard, getAllUsers, toggleUserStatus, getActivityLogs,
   getPendingCompanies, getAllCompanies, approveCompany, toggleCompanyApproval, createCompany,
 } = require('../controllers/adminController');
 const {
@@ -18,11 +18,12 @@ router.get('/dashboard', getDashboard);
 // Users
 router.get('/users', getAllUsers);
 router.put('/users/:id/toggle-status', toggleUserStatus);
+router.get('/activity-logs', getActivityLogs);
 
 // Companies
 router.get('/companies/pending', getPendingCompanies);
 router.get('/companies', getAllCompanies);
-router.post('/companies', uploadLogo.single('logo'), createCompany);
+router.post('/companies', uploadLogo, createCompany);
 router.put('/companies/:id/approve', approveCompany);
 router.put('/companies/:id/toggle-approval', toggleCompanyApproval);
 

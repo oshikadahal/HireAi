@@ -1,5 +1,6 @@
 const path = require('path');
 const asyncHandler = require('express-async-handler');
+const { body, validationResult } = require('express-validator');
 const Candidate = require('../models/Candidate');
 const Application = require('../models/Application');
 const { publicPath } = require('../middleware/upload');
@@ -16,22 +17,53 @@ exports.getProfile = asyncHandler(async (req, res) => {
   res.json({ success: true, profile });
 });
 
-// PUT /api/candidates/profile
-exports.updateProfile = asyncHandler(async (req, res) => {
+const validateProfileRequest = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400);
+    throw new Error(errors.array()[0].msg);
+  }
+  next();
+};
+
+const sanitizeProfileUpdate = (body) => {
   const allowed = ['headline', 'bio', 'skills', 'education', 'experience', 'github', 'linkedin', 'portfolio', 'location'];
   const updates = {};
   for (const key of allowed) {
-    if (req.body[key] !== undefined) updates[key] = req.body[key];
+    if (body[key] !== undefined) {
+      if (key === 'skills') {
+        updates[key] = Array.isArray(body[key]) ? body[key].slice(0, 30).map((s) => String(s).trim()).filter(Boolean) : [];
+      } else if (['education', 'experience'].includes(key)) {
+        updates[key] = Array.isArray(body[key]) ? body[key].slice(0, 10) : [];
+      } else if (typeof body[key] === 'string') {
+        updates[key] = body[key].trim();
+      } else {
+        updates[key] = body[key];
+      }
+    }
   }
+  return updates;
+};
 
-  const profile = await Candidate.findOneAndUpdate(
-    { user: req.user._id },
-    updates,
-    { new: true, runValidators: true, upsert: true }
-  ).populate('user', 'name email phone avatar');
+// PUT /api/candidates/profile
+exports.updateProfile = [
+  body('headline').optional().isString().isLength({ max: 120 }).withMessage('Headline is too long'),
+  body('bio').optional().isString().isLength({ max: 2000 }).withMessage('Bio is too long'),
+  body('skills').optional().isArray().withMessage('Skills must be an array'),
+  body('education').optional().isArray().withMessage('Education must be an array'),
+  body('experience').optional().isArray().withMessage('Experience must be an array'),
+  validateProfileRequest,
+  asyncHandler(async (req, res) => {
+    const updates = sanitizeProfileUpdate(req.body);
+    const profile = await Candidate.findOneAndUpdate(
+      { user: req.user._id },
+      updates,
+      { new: true, runValidators: true, upsert: true }
+    ).populate('user', 'name email phone avatar');
 
-  res.json({ success: true, profile });
-});
+    res.json({ success: true, profile });
+  }),
+];
 
 // POST /api/candidates/upload-resume
 exports.uploadResume = asyncHandler(async (req, res) => {
@@ -69,6 +101,64 @@ exports.uploadResume = asyncHandler(async (req, res) => {
     profile,
   });
 });
+
+// GET /api/candidates/export-profile
+exports.exportProfile = asyncHandler(async (req, res) => {
+  const profile = await Candidate.findOne({ user: req.user._id }).populate('user', 'name email phone avatar');
+  if (!profile) {
+    return res.status(404).json({ success: false, message: 'Profile not found' });
+  }
+
+  const exportPayload = {
+    exportedAt: new Date().toISOString(),
+    profile: {
+      headline: profile.headline || '',
+      bio: profile.bio || '',
+      skills: profile.skills || [],
+      education: profile.education || [],
+      experience: profile.experience || [],
+      github: profile.github || '',
+      linkedin: profile.linkedin || '',
+      portfolio: profile.portfolio || '',
+      location: profile.location || '',
+      resumeUrl: profile.resumeUrl || '',
+    },
+  };
+
+  res.json({ success: true, export: exportPayload });
+});
+
+// POST /api/candidates/import-profile
+exports.importProfile = [
+  body('profile').isObject().withMessage('Profile payload must be an object'),
+  validateProfileRequest,
+  asyncHandler(async (req, res) => {
+    const payload = req.body.profile;
+    const allowed = ['headline', 'bio', 'skills', 'education', 'experience', 'github', 'linkedin', 'portfolio', 'location'];
+    const updates = {};
+    for (const key of allowed) {
+      if (payload[key] !== undefined) {
+        if (key === 'skills') {
+          updates[key] = Array.isArray(payload[key]) ? payload[key].slice(0, 30).map((s) => String(s).trim()).filter(Boolean) : [];
+        } else if (['education', 'experience'].includes(key)) {
+          updates[key] = Array.isArray(payload[key]) ? payload[key].slice(0, 10) : [];
+        } else if (typeof payload[key] === 'string') {
+          updates[key] = payload[key].trim();
+        } else {
+          updates[key] = payload[key];
+        }
+      }
+    }
+
+    const profile = await Candidate.findOneAndUpdate(
+      { user: req.user._id },
+      updates,
+      { new: true, runValidators: true, upsert: true }
+    ).populate('user', 'name email phone avatar');
+
+    res.json({ success: true, profile, message: 'Profile imported securely' });
+  }),
+];
 
 // GET /api/candidates/dashboard-stats
 exports.getDashboardStats = asyncHandler(async (req, res) => {

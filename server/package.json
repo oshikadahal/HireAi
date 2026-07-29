@@ -5,11 +5,11 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
+    "start": "cross-env NODE_ENV=production node index.js",
+    "dev": "cross-env NODE_ENV=development nodemon index.js",
     "seed": "node scripts/seed.js",
     "security:manual-tests": "bash scripts/manual_tests.sh",
-    "test": "jest --runInBand --detectOpenHandles"
+    "test": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -38,6 +38,7 @@
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "nodemon": "^3.1.4",
     "jest": "^30.4.2",
     "supertest": "^6.3.4"

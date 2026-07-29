@@ -39,8 +39,7 @@ describe('Upload middleware', () => {
   test('rejects spoofed mime/extension (exploit.html sent as image/png)', async () => {
     const res = await request(app)
       .post('/test/upload')
-      .attach('file', path.join(__dirname, 'fixtures', 'exploit.html'))
-      .set('Content-Type', 'multipart/form-data');
+      .attach('file', path.join(__dirname, 'fixtures', 'exploit.html'));
 
     expect(res.status).toBe(400);
     expect(res.body).toHaveProperty('message');
@@ -49,8 +48,7 @@ describe('Upload middleware', () => {
   test('accepts valid PDF resume and returns filename', async () => {
     const res = await request(app)
       .post('/test/upload')
-      .attach('file', path.join(__dirname, 'fixtures', 'resume.pdf'))
-      .set('Content-Type', 'multipart/form-data');
+      .attach('file', path.join(__dirname, 'fixtures', 'resume.pdf'));
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('filename');

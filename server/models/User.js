@@ -18,6 +18,8 @@ const userSchema = new mongoose.Schema(
     avatar: { type: String, default: '' },
     isActive: { type: Boolean, default: true },
     passwordChangedAt: { type: Date, default: Date.now },
+    passwordExpiresAt: { type: Date, default: null },
+    passwordHistory: [{ type: String, select: false }],
     loginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
     mfaEnabled: { type: Boolean, default: false },

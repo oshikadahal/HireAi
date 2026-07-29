@@ -8,6 +8,9 @@ const activityLogSchema = new mongoose.Schema(
     details: { type: String, default: '' },
     ipAddress: { type: String, default: '' },
     userAgent: { type: String, default: '' },
+    severity: { type: String, enum: ['low', 'medium', 'high'], default: 'low' },
+    resource: { type: String, default: '' },
+    alert: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

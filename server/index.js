@@ -45,7 +45,7 @@ app.use(generalLimiter);
 // ── Health check and CSRF token endpoint ──────────────────
 app.get('/api/health', (req, res) => res.json({ success: true, message: 'HireAI API is running' }));
 app.get('/api/csrf-token', (req, res) => res.json({ success: true, csrfToken: req.csrfToken() }));
-
+// // CSRF token endpoint returns a valid token for frontend requests
 // Note: route registration and error handlers are performed when not testing
 // to avoid loading route modules (which may import ESM-only dependencies)
 // during unit tests that only need the minimal app.
@@ -55,7 +55,7 @@ const PORT = Number(process.env.PORT || 5000);
 
 const startServer = (port) => {
   const server = app.listen(port, '0.0.0.0', () => {
-    console.log(`🚀 HireAI API running on http://localhost:${port}`);
+    console.log(` HireAI API running on http://localhost:${port}`);
     console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
   });
 

@@ -18,6 +18,10 @@ export default function CandidateProfile() {
   const [resumeUploading, setResumeUploading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [parsedPreview, setParsedPreview] = useState(null);
+  const [mfaToken, setMfaToken] = useState('');
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [mfaSecret, setMfaSecret] = useState('');
+  const [mfaOtpUri, setMfaOtpUri] = useState('');
 
   useEffect(() => {
     api.get('/candidates/profile').then((r) => setProfile(r.data.profile)).finally(() => setLoading(false));
@@ -63,6 +67,37 @@ export default function CandidateProfile() {
       }
     },
   });
+
+  const enableMfa = async () => {
+    setMfaLoading(true);
+    try {
+      const r = await api.post('/auth/enable-mfa');
+      setMfaSecret(r.data.secret);
+      setMfaOtpUri(r.data.otpauth);
+      toast.success('MFA setup started — scan the QR code and verify it below.');
+    } catch {
+      toast.error('Unable to start MFA setup');
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  const verifyMfa = async () => {
+    if (!mfaToken.trim()) return toast.error('Enter the 6-digit verification code');
+    setMfaLoading(true);
+    try {
+      await api.post('/auth/verify-mfa', { token: mfaToken });
+      toast.success('MFA enabled successfully');
+      setMfaToken('');
+      setMfaSecret('');
+      setMfaOtpUri('');
+      await dispatch(fetchMe());
+    } catch {
+      toast.error('MFA verification failed');
+    } finally {
+      setMfaLoading(false);
+    }
+  };
 
   const save = async () => {
     setSaving(true);
@@ -194,6 +229,28 @@ export default function CandidateProfile() {
             </p>
             <div className="flex flex-wrap gap-1.5">
               {parsedPreview.skills.map((s) => <span key={s} className="badge bg-signal/10 text-signal-dark">{s}</span>)}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Security */}
+      <div className="card space-y-4">
+        <h2 className="font-display font-semibold text-slate-ink border-b border-slate-100 pb-3">Security</h2>
+        <p className="text-sm text-slate-soft">Add an extra layer of protection with TOTP-based MFA.</p>
+        {!mfaSecret ? (
+          <button onClick={enableMfa} disabled={mfaLoading} className="btn-ghost">
+            {mfaLoading ? 'Preparing…' : 'Enable MFA'}
+          </button>
+        ) : (
+          <div className="space-y-3 rounded-xl border border-slate-200 p-4 bg-slate-50">
+            <p className="text-sm font-medium text-slate-ink">Scan this code with Google Authenticator or similar</p>
+            <div className="rounded-lg bg-white p-3 text-xs break-all text-slate-600">{mfaOtpUri}</div>
+            <div className="flex gap-2">
+              <input type="text" className="input" placeholder="6-digit code" value={mfaToken} onChange={(e) => setMfaToken(e.target.value)} />
+              <button onClick={verifyMfa} disabled={mfaLoading} className="btn-primary whitespace-nowrap">
+                {mfaLoading ? 'Verifying…' : 'Verify'}
+              </button>
             </div>
           </div>
         )}

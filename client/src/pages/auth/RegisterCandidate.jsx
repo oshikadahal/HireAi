@@ -10,15 +10,42 @@ import AuthSidePanel from './AuthSidePanel.jsx';
 const FIELDS = [
   { field: 'name', label: 'Full Name', type: 'text', placeholder: 'John Doe', icon: User },
   { field: 'email', label: 'Email Address', type: 'email', placeholder: 'you@example.com', icon: Mail },
-  { field: 'phone', label: 'Phone Number', type: 'tel', placeholder: '+1 234 567 8900', icon: Phone },
-  { field: 'password', label: 'Password', type: 'password', placeholder: 'Min 6 characters', icon: Lock },
+  { field: 'phone', label: 'Phone Number', type: 'tel', placeholder: '+977 98 123 4567', icon: Phone },
+  { field: 'password', label: 'Password', type: 'password', placeholder: 'Min 8 characters', icon: Lock, minLength: 8 },
 ];
+
+const getPasswordStrength = (password) => {
+  if (!password) {
+    return { label: 'Enter a password', score: 0, color: 'bg-slate-200' };
+  }
+
+  if (password.length < 8) {
+    return { label: 'Minimum 8 characters', score: 1, color: 'bg-rose-500' };
+  }
+
+  const lengthScore = password.length >= 10 ? 2 : 1;
+  const varietyScore = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].reduce(
+    (sum, re) => sum + (re.test(password) ? 1 : 0),
+    0
+  );
+
+  const score = Math.min(3, lengthScore + Math.min(varietyScore, 1));
+  if (score === 1) {
+    return { label: 'Weak password', score: 1, color: 'bg-rose-500' };
+  }
+  if (score === 2) {
+    return { label: 'Good password', score: 2, color: 'bg-amber-400' };
+  }
+
+  return { label: 'Strong password', score: 3, color: 'bg-emerald-500' };
+};
 
 export default function RegisterCandidate() {
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' });
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading } = useSelector((s) => s.auth);
+  const passwordStrength = getPasswordStrength(form.password);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,8 +84,20 @@ export default function RegisterCandidate() {
                     value={form[field]}
                     onChange={(e) => setForm({ ...form, [field]: e.target.value })}
                     required={field !== 'phone'}
+                    minLength={field === 'password' ? 8 : undefined}
                   />
                 </div>
+                {field === 'password' && (
+                  <div className="mt-2">
+                    <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${passwordStrength.color}`}
+                        style={{ width: `${(passwordStrength.score / 3) * 100}%` }}
+                      />
+                    </div>
+                    <p className="mt-1 text-xs font-medium text-slate-600">{passwordStrength.label}</p>
+                  </div>
+                )}
               </div>
             ))}
             <button type="submit" disabled={loading} className="btn-primary w-full mt-2">

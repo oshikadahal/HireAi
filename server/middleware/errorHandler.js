@@ -47,9 +47,18 @@ exports.errorHandler = (err, req, res, next) => {
     console.error('💥 Unhandled error:', err);
   }
 
-  res.status(statusCode).json({
+  // ── Security: Never expose stack traces in production or testing ──
+  const isDevelopmentOnly = process.env.NODE_ENV === 'development' && process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+  
+  const errorResponse = {
     success: false,
     message,
-    ...(process.env.NODE_ENV === 'development' ? { stack: err.stack } : {}),
-  });
+  };
+
+  // Only include stack trace in strict development mode, never in production/test
+  if (isDevelopmentOnly) {
+    errorResponse.stack = err.stack;
+  }
+
+  res.status(statusCode).json(errorResponse);
 };
